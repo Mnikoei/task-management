@@ -9,7 +9,7 @@ Route::prefix('auth')->group(function () {
     Route::name('auth.logout')->middleware('throttle:10,1')->post('logout', [AuthController::class, 'logout']);
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('user', [UserController::class, 'show']);
-    Route::post('user', [UserController::class, 'update']);
+    Route::match(['put', 'patch'], 'user', [UserController::class, 'update']);
 });

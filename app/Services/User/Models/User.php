@@ -2,23 +2,29 @@
 
 namespace App\Services\User\Models;
 
+use App\Contracts\CacheRepoContract;
+use App\Services\AccessLevel\Models\Role;
+use App\Services\AccessLevel\Models\RoleUser;
 use App\Services\User\Database\Factory\UserFactory;
+use App\Services\User\Models\Traits\HasCacheRepo;
+use App\Services\User\Models\Traits\HasPermissions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 
-class User extends Authenticatable
+class User extends Authenticatable implements CacheRepoContract
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable;
+    use HasApiTokens;
+    use HasPermissions;
+    use HasCacheRepo;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'name',
+        'username',
         'email',
         'password',
     ];
@@ -49,5 +55,10 @@ class User extends Authenticatable
     protected static function newFactory()
     {
         return UserFactory::new();
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class)->using(RoleUser::class);
     }
 }

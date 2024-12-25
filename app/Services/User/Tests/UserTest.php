@@ -8,24 +8,22 @@ use Tests\TestCase;
 class UserTest extends TestCase
 {
     use RefreshDatabase;
-
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed();
+    }
 
     public function testGetUserData()
     {
         $this->authenticatedUser([
-            'name' => 'john',
-            'username' => 'doo',
-            'balance' => 1000,
-            'reserved' => 1255
+            'username' => 'John'
         ]);
 
-        $response = $this->get('user');
+        $response = $this->getJson('api/v1/user');
 
         $response->assertJson([
-            'name' => 'john',
-            'username' => 'doo',
-            'balance' => 1000,
-            'reserved' => 1255
+            'username' => 'John',
         ]);
     }
 }

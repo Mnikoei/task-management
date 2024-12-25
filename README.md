@@ -1,66 +1,142 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Task Management Project
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Project Structure
+This project consists of separate services located in the `app/Services` directory.  
+Each service includes its own entities and is relatively isolated from the other services.
 
-## About Laravel
+Tests for each service are placed in its respective `Tests` directory.  
+To execute the tests, simply run the following command:
+```bash
+composer tests
+```
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Service Explanations
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### User Registration and Login
+The logic for this section is located in the `app/Services/User` directory.
 
-## Learning Laravel
+The following routes are defined for user registration and login:
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Various authentication approaches are supported in this project. For this implementation, I chose Laravel Sanctum to enhance my experience.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Tests related to authentication can be found in:  
+`app/Services/User/Tests/Auth`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+### Defining Access Levels
+The resources and logic for defining access levels are located in the `app/Services/AccessLevel` directory.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+While this project utilizes the Spatie package, I implemented a simplified custom approach to better illustrate the details of the process.
 
-### Premium Partners
+Four resources are used for access level management:
+- `roles`
+- `role_user`
+- `permission`
+- `role_permission`
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+The middleware `Services/AccessLevel/Http/MiddleWares/EnsureHasPermission.php`  
+is responsible for verifying whether a user has the necessary permissions for the requested action.
 
-## Contributing
+This middleware is applied to all actions related to task creation. Permissions are cached until either a change occurs, causing a cache flush, or the cache expires naturally.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Assigning permission example:
+```php
+$role = Role::create(['title' => 'admin', 'description' => '']);  
+$role->permissions()->create(['title' => 'can-create-task', 'description' => '']);  
+$user->roles()->save($role);  
+$user->hasPermission('can-create-task'); // true  
+```
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Task Management
+All logic for creating, updating, and deleting tasks is located in the `app/Services/Task` directory.  
+Tests related to this functionality are in the `app/Services/Task/Tests` directory.
 
-## Security Vulnerabilities
+A user can create, edit, and delete tasks.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+The related logic is in:  
+`app/Services/Task/Http/Controllers/V1/TaskController.php`
 
-## License
+And the routes are defined in:
+`app/Services/Task/Routes/V1/routes.php`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+Actions are defined outside the controller and include:
+- Task creation
+- Task editing
+- Task deletion
+- Retrieving a list of tasks with filters, search, and caching
+
+Users can change a task's status via web services. Additionally, a better approach using the **State Design Pattern** is implemented, which, while not essential for this project, can be useful for more complex logic.  
+This logic resides in:  
+`app/Services/Task/Http/Controllers/V1/StateController.php`
+
+The tests for this functionality are in:  
+`app/Services/Task/Tests/TaskStateChangeTest.php`
+
+---
+
+### Logging
+A custom logger service is implemented in `app/Services/Support/LoggerService`.
+
+This logger listens for any event that implements the following contract:  
+`app/Services/Support/LoggerService/Contracts/HasSensitiveLog.php`
+
+Captured data is passed to the log repository for storage. The repository can handle additional processing, such as normalization, buffering, or asynchronous operations.
+
+For example, the event `app/Services/Task/Events/TaskResourceModified.php` implements the `HasSensitiveLog` contract and is listened to by the logger.
+
+This event is triggered by the observer `app/Services/Task/Models/Observers/TaskHistoryRecorder.php`, which tracks changes to tasks and logs details, including the user who made the modifications.
+
+---
+
+All defined web service endpoints in the system:
+
+- `GET|HEAD    /api/user`
+- `POST        /api/v1/auth/login`
+- `POST        /api/v1/auth/logout`
+- `POST        /api/v1/auth/register`
+- `GET|HEAD    /api/v1/task`
+- `POST        /api/v1/task`
+- `GET|HEAD    /api/v1/task/create`
+- `GET|HEAD    /api/v1/task/{task}`
+- `PUT|PATCH   /api/v1/task/{task}`
+- `DELETE      /api/v1/task/{task}`
+- `GET|HEAD    /api/v1/task/{task}/edit`
+- `POST        /api/v1/task/{task}/state/next`
+- `POST        /api/v1/task/{task}/state/previous`
+- `GET|HEAD    /api/v1/user`
+- `PUT|PATCH   /api/v1/user`
+
+
+## Docker Setup
+To set up the project using Docker, navigate to the `laradock` directory and run:
+```bash
+docker-compose up -d nginx php-fpm redis postgres workspace
+```  
+
+The project will then be accessible at:  
+[http://localhost](http://localhost)
+
+---
+
+## `.env` Configuration
+```dotenv
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_DATABASE=default
+DB_USERNAME=default
+DB_PASSWORD=secret
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=redis
+REDIS_PASSWORD=secret_redis
+REDIS_PORT=6379
+```

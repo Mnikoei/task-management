@@ -14,6 +14,12 @@
         <testsuite name="Task">
             <directory suffix="Test.php">./app/Services/Task/Tests</directory>
         </testsuite>
+        <testsuite name="User">
+            <directory suffix="Test.php">./app/Services/User/Tests</directory>
+        </testsuite>
+        <testsuite name="loggerServie">
+            <directory suffix="Test.php">./app/Services/Support/LoggerService/Tests</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -28,6 +34,7 @@
          <env name="DB_CONNECTION" value="sqlite"/>
          <env name="DB_DATABASE" value=":memory:"/>
         <env name="MAIL_MAILER" value="array"/>
+        <env name="APP_TIMEZONE" value="Asia/Tehran"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

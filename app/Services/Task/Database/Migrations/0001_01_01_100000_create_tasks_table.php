@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('description', 5000)->nullable();
-            $table->foreignId('creator_id')->constrained('users');
+            $table->foreignId('creator_id')->references('id')->on('users');
             $table->date('due_date');
             $table->string('status')->default(TaskStatus::PENDING);
             $table->timestamps();

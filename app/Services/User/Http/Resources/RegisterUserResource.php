@@ -12,7 +12,7 @@ class RegisterUserResource extends JsonResource
     {
         return [
             'user' => new UserResource($this->resource),
-            'redirect_to' => 'panel'
+            'redirect_to' => 'login'
         ];
     }
 }

@@ -12,29 +12,25 @@ class UserUpdateTest extends TestCase
 {
     use RefreshDatabase, WithFaker;
 
-    /**
-     * @test
-     */
-    public function getUserData(): void
+    protected function setUp(): void
     {
-        $user = $this->createUser();
-        $this->actingAs($user);
+        parent::setUp();
+        $this->seed();
+    }
 
-        $response = $this->patch('user', [
-            'name' => $this->faker->name,
-            'national_code' => '4240398363',
-            'mobile' => '0901235000',
-            'address_ir' => $this->faker->address,
-            'address_out_of_ir' => $this->faker->address,
-            'postal_code_ir' => (string) $this->faker->randomNumber(),
-            'phone' => $this->faker->e164PhoneNumber,
-            'national_card' => UploadedFile::fake()->image('avatar.jpg')
+    public function testUserCanUpdateOwnInformation(): void
+    {
+        $user = $this->authenticatedUser();
+
+        $response = $this->patch('api/v1/user', [
+            'username' => $username = $this->faker->userName,
+            'email' => $email = $this->faker->email,
         ]);
 
-        dd($response->json());
+        $response->assertJson([
+            'username' => $username,
+        ]);
 
-        $response->assertOk();
-
-        dd($user->refresh());
+        $this->assertEquals($user->refresh()->email, $email);
     }
 }

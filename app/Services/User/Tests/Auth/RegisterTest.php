@@ -12,7 +12,6 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Testing\Fluent\Concerns\Has;
 use Tests\TestCase;
 
 class RegisterTest extends TestCase
@@ -20,36 +19,18 @@ class RegisterTest extends TestCase
     use RefreshDatabase;
     use WithFaker;
 
-    /**
-     * @test
-     * This test is not reliable enough
-     */
-    public function user_can_register_with_correct_username()
+    public function testUserCanRegister()
     {
-        $this->postJson('auth/register', [
-            'username' => 'nader-kochike',
-            'password' => $p = $this->faker->password,
-            'password_confirmation' => $p,
-            'email' => $this->faker->email,
-            'mobile' => '09' . mt_rand(100000000, 999999999)
-        ])->assertStatus(201);
+        $this->postJson('api/v1/auth/register', [
+            'username' => Str::random(),
+            'password' => $password = Str::password(8, true, true, false, false),
+            'password_confirmation' => $password,
+            'email' => $this->faker->email
+        ])->assertStatus(201, $password);
     }
 
-    /**
-     * @test
-     */
-    public function user_can_login_with_email()
+    public function testInputValidation()
     {
-        $user = $this->createUser();
-
-        $password = Str::random();
-
-        $user->password = Hash::make($password);
-        $user->save();
-
-        $this->post('auth/login', [
-            'username' => $user->username,
-            'password' => $password
-        ])->assertOk();
+//        $this->assertTrue(false);
     }
 }

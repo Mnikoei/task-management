@@ -21,9 +21,9 @@ The following routes are defined for user registration and login:
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
 
-Various authentication approaches are supported in this project. For this implementation, I chose Laravel Sanctum to enhance my experience.
+Various authentication approaches are supported in this project. For this implementation, I chose **Laravel Sanctum** to enhance my experience.
 
-Tests related to authentication can be found in:  
+**Tests related to authentication can be found in:**  
 `app/Services/User/Tests/Auth`
 
 ---
@@ -31,7 +31,7 @@ Tests related to authentication can be found in:
 ### Defining Access Levels
 The resources and logic for defining access levels are located in the `app/Services/AccessLevel` directory.
 
-While this project utilizes the Spatie package, I implemented a simplified custom approach to better illustrate the details of the process.
+While this project may utilize the Spatie package, I implemented a simplified custom approach to better illustrate the details of the process.
 
 Four resources are used for access level management:
 - `roles`
@@ -43,6 +43,11 @@ The middleware `Services/AccessLevel/Http/MiddleWares/EnsureHasPermission.php`
 is responsible for verifying whether a user has the necessary permissions for the requested action.
 
 This middleware is applied to all actions related to task creation. Permissions are cached until either a change occurs, causing a cache flush, or the cache expires naturally.
+
+An example of using this middleware can be found at:  
+`app/Services/Task/Http/Controllers/V1/TaskController.php:52`.
+
+This functionality could also be achieved through Laravel Gates, Route Middleware, or Sanctum Token Abilities. For this project, I chose to use Controller Middleware.
 
 Assigning permission example:
 ```php
@@ -66,6 +71,9 @@ The related logic is in:
 And the routes are defined in:
 `app/Services/Task/Routes/V1/routes.php`
 
+Each action has its own dedicated Action class for SOC (Separation of Concerns) and decoupling of code, located in:  
+`app/Services/Task/Http/Controllers/V1/Actions`
+
 
 Actions are defined outside the controller and include:
 - Task creation
@@ -80,6 +88,17 @@ This logic resides in:
 The tests for this functionality are in:  
 `app/Services/Task/Tests/TaskStateChangeTest.php`
 
+For filtering and searching, although there are better approaches for more complex processing, a simple filtering model has been implemented for this small project.
+
+Each filter extends from:  
+`app/Http/Filters/BaseQueryFilter.php`
+
+The filter instance is injected into the controller by the Laravel DI mechanism.
+
+
+For example, an implementation can be found here:  
+`app/Services/Task/Http/Controllers/V1/TaskController.php:45`
+
 ---
 
 ### Logging
@@ -87,6 +106,9 @@ A custom logger service is implemented in `app/Services/Support/LoggerService`.
 
 This logger listens for any event that implements the following contract:  
 `app/Services/Support/LoggerService/Contracts/HasSensitiveLog.php`
+
+The listener is defined at:  
+`app/Services/Support/LoggerService/LoggerServiceProvider.php:20`
 
 Captured data is passed to the log repository for storage. The repository can handle additional processing, such as normalization, buffering, or asynchronous operations.
 
@@ -98,10 +120,17 @@ This event is triggered by the observer `app/Services/Task/Models/Observers/Task
 
 All defined web service endpoints in the system:
 
-- `GET|HEAD    /api/user`
+#### Authentication
 - `POST        /api/v1/auth/login`
 - `POST        /api/v1/auth/logout`
 - `POST        /api/v1/auth/register`
+
+#### User Management
+- `GET|HEAD    /api/user`
+- `GET|HEAD    /api/v1/user`
+- `PUT|PATCH   /api/v1/user`
+
+#### Task Management
 - `GET|HEAD    /api/v1/task`
 - `POST        /api/v1/task`
 - `GET|HEAD    /api/v1/task/create`
@@ -109,10 +138,10 @@ All defined web service endpoints in the system:
 - `PUT|PATCH   /api/v1/task/{task}`
 - `DELETE      /api/v1/task/{task}`
 - `GET|HEAD    /api/v1/task/{task}/edit`
+
+#### Task State Management
 - `POST        /api/v1/task/{task}/state/next`
 - `POST        /api/v1/task/{task}/state/previous`
-- `GET|HEAD    /api/v1/user`
-- `PUT|PATCH   /api/v1/user`
 
 
 ## Docker Setup
